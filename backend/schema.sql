@@ -102,6 +102,7 @@ UNIQUE (student_id, subject_code, period_start, period_end);
 -- Unified Student Profile View
 -- ================================
 
+
 CREATE OR REPLACE VIEW unified_student_profile AS
 SELECT
     s.student_id,
