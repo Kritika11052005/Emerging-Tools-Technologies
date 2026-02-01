@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import {Target, Zap } from "lucide-react"
-import { DataSphereBooks3D } from "../ui/DataSphereBooks3D"
+import { Target, Zap } from "lucide-react"
+import { EduAlertCard } from "../ui/EduAlertCard"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -82,50 +82,9 @@ export function About() {
             </div>
           </div>
 
-          {/* Right - 3D Visualization with Enhanced Background */}
+          {/* Right - 3D Card */}
           <div className="relative">
-            {/* Main card with gradient background and glow */}
-            <div className="relative aspect-square rounded-3xl shadow-2xl overflow-hidden">
-              {/* Animated gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-400/20 via-orange-500/30 to-orange-600/20 dark:from-orange-500/10 dark:via-orange-600/20 dark:to-orange-700/10"></div>
-              
-              {/* Radial gradient overlay */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(255,107,53,0.1)_100%)]"></div>
-              
-              {/* Animated circles background */}
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-orange-400/10 dark:bg-orange-500/5 rounded-full blur-2xl animate-pulse"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-orange-500/10 dark:bg-orange-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-orange-300/10 dark:bg-orange-400/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-              </div>
-
-              {/* Grid pattern overlay */}
-              <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02]"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(rgba(255,107,53,0.5) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,107,53,0.5) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '50px 50px'
-                }}
-              ></div>
-
-              {/* 3D Content */}
-              <div className="relative z-10 w-full h-full">
-                <DataSphereBooks3D />
-              </div>
-
-              {/* Subtle border glow */}
-              <div className="absolute inset-0 rounded-3xl border border-orange-500/20 dark:border-orange-600/30"></div>
-            </div>
-
-            {/* Floating decorative elements */}
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-orange-400/20 dark:bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-orange-500/20 dark:bg-orange-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-            
-            {/* Corner accents */}
-            <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-orange-500/30 dark:border-orange-600/20 rounded-tr-2xl"></div>
-            <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-orange-500/30 dark:border-orange-600/20 rounded-bl-2xl"></div>
+            <EduAlertCard />
           </div>
         </div>
 
