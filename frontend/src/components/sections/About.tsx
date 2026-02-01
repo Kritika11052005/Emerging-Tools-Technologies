@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { BookOpen, Target, Zap } from "lucide-react"
+import { Target, Zap } from "lucide-react"
+import { DataSphereBooks3D } from "../ui/DataSphereBooks3D"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -81,22 +82,14 @@ export function About() {
             </div>
           </div>
 
-          {/* Right - Image/Graphic Placeholder */}
+          {/* Right - 3D Visualization */}
           <div className="relative">
-            <div className="aspect-square bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/20 rounded-3xl shadow-2xl flex items-center justify-center">
-              <div className="text-center p-8">
-                <BookOpen className="w-24 h-24 text-orange-600 dark:text-orange-400 mx-auto mb-4" />
-                <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  Data-Driven Insights
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Powered by Machine Learning & LLMs
-                </p>
-              </div>
+            <div className="aspect-square bg-gradient-to-br from-orange-50/50 to-orange-100/50 dark:from-orange-900/20 dark:to-orange-800/10 rounded-3xl shadow-2xl flex items-center justify-center overflow-hidden">
+              <DataSphereBooks3D />
             </div>
             {/* Decorative Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-300/30 dark:bg-orange-600/20 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-orange-400/30 dark:bg-orange-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-orange-300/30 dark:bg-orange-600/20 rounded-full blur-2xl animate-pulse"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-orange-400/30 dark:bg-orange-500/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
         </div>
 
