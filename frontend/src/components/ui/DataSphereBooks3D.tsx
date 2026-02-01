@@ -1,65 +1,117 @@
 import { useEffect, useRef } from "react"
 import * as THREE from "three"
 
+// Singleton instance tracker
+class SceneManager {
+  private static instance: THREE.Scene | null = null
+  private static renderer: THREE.WebGLRenderer | null = null
+  private static animationId: number | null = null
+  private static isCreating: boolean = false
+
+  static hasInstance(): boolean {
+    return this.instance !== null
+  }
+
+  static setInstance(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
+    this.instance = scene
+    this.renderer = renderer
+  }
+
+  static setAnimationId(id: number) {
+    this.animationId = id
+  }
+
+  static cleanup() {
+    if (this.animationId !== null) {
+      cancelAnimationFrame(this.animationId)
+      this.animationId = null
+    }
+    this.instance = null
+    this.renderer?.dispose()
+    this.renderer = null
+    this.isCreating = false
+  }
+
+  static startCreating() {
+    this.isCreating = true
+  }
+
+  static isCurrentlyCreating() {
+    return this.isCreating
+  }
+}
+
 export function DataSphereBooks3D() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const localSceneRef = useRef<THREE.Scene | null>(null)
+  const localRendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const mountedRef = useRef(false)
 
   useEffect(() => {
+    // Prevent double initialization in StrictMode
+    if (mountedRef.current) return
+    mountedRef.current = true
+
     if (!containerRef.current) return
-
-    // Scene setup
-    const scene = new THREE.Scene()
     
-    // Camera
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      1,
-      0.1,
-      1000
-    )
-    camera.position.z = 8
-    camera.position.y = 2
+    // Check if scene already exists or is being created
+    if (SceneManager.hasInstance() || SceneManager.isCurrentlyCreating()) {
+      console.log("Scene already exists or being created, skipping...")
+      return
+    }
 
-    // Renderer
+    SceneManager.startCreating()
+    console.log("Creating SINGLE 3D scene (StrictMode safe)")
+
+    const scene = new THREE.Scene()
+    localSceneRef.current = scene
+    
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
+    camera.position.z = 6
+    camera.position.y = 0
+
+    const container = containerRef.current
+    const size = Math.min(container.clientWidth, container.clientHeight, 600)
+    
     const renderer = new THREE.WebGLRenderer({ 
       alpha: true, 
       antialias: true 
     })
-    renderer.setSize(400, 400)
-    renderer.setClearColor(0x000000, 0) // Transparent background
-    containerRef.current.appendChild(renderer.domElement)
+    renderer.setSize(size, size)
+    renderer.setClearColor(0x000000, 0)
+    container.appendChild(renderer.domElement)
+    localRendererRef.current = renderer
 
-    // Colors (Manipal Orange theme)
+    // Register with singleton manager
+    SceneManager.setInstance(scene, renderer)
+
     const orangeColor = 0xff6b35
     const lightOrangeColor = 0xff8c5a
     const creamColor = 0xfff5e6
 
-    // ===== CREATE FLOATING BOOKS =====
+    // ===== BOOKS =====
     const books: THREE.Mesh[] = []
-    const bookCount = 5
+    const bookCount = 6
 
     for (let i = 0; i < bookCount; i++) {
-      // Book geometry (thin box)
-      const width = 0.8 + Math.random() * 0.4
-      const height = 1 + Math.random() * 0.5
-      const depth = 0.15
+      const width = 0.6 + Math.random() * 0.3
+      const height = 0.8 + Math.random() * 0.4
+      const depth = 0.12
       
       const bookGeometry = new THREE.BoxGeometry(width, height, depth)
       const bookMaterial = new THREE.MeshStandardMaterial({
         color: i % 2 === 0 ? orangeColor : lightOrangeColor,
         metalness: 0.3,
-        roughness: 0.6,
+        roughness: 0.5,
       })
       const book = new THREE.Mesh(bookGeometry, bookMaterial)
       
-      // Position books in a circle around the sphere
       const angle = (i / bookCount) * Math.PI * 2
-      const radius = 4
+      const radius = 3.5
       book.position.x = Math.cos(angle) * radius
       book.position.z = Math.sin(angle) * radius
-      book.position.y = -1 + Math.random() * 2
+      book.position.y = -0.5 + Math.random() * 1
       
-      // Random rotation
       book.rotation.x = Math.random() * 0.3
       book.rotation.y = angle + Math.PI / 2
       book.rotation.z = Math.random() * 0.2
@@ -68,26 +120,25 @@ export function DataSphereBooks3D() {
       books.push(book)
     }
 
-    // ===== CREATE DOCUMENTS/PAPERS =====
+    // ===== DOCUMENTS =====
     const documents: THREE.Mesh[] = []
-    const documentCount = 4
+    const documentCount = 5
 
     for (let i = 0; i < documentCount; i++) {
-      const docGeometry = new THREE.PlaneGeometry(1, 1.4)
+      const docGeometry = new THREE.PlaneGeometry(0.8, 1.1)
       const docMaterial = new THREE.MeshStandardMaterial({
         color: creamColor,
         side: THREE.DoubleSide,
         metalness: 0.1,
-        roughness: 0.8,
+        roughness: 0.7,
       })
       const document = new THREE.Mesh(docGeometry, docMaterial)
       
-      // Position documents
-      const angle = (i / documentCount) * Math.PI * 2 + Math.PI / 4
-      const radius = 3.5
+      const angle = (i / documentCount) * Math.PI * 2 + Math.PI / 5
+      const radius = 3
       document.position.x = Math.cos(angle) * radius
       document.position.z = Math.sin(angle) * radius
-      document.position.y = Math.random() * 3 - 1
+      document.position.y = Math.random() * 2 - 1
       
       document.rotation.y = angle
       
@@ -95,49 +146,49 @@ export function DataSphereBooks3D() {
       documents.push(document)
     }
 
-    // ===== CREATE CENTRAL DATA SPHERE =====
-    const sphereGeometry = new THREE.SphereGeometry(1, 32, 32)
+    // ===== SINGLE SPHERE =====
+    console.log("Adding SINGLE sphere to scene")
+    const sphereGeometry = new THREE.SphereGeometry(2.2, 32, 32)
     const sphereMaterial = new THREE.MeshStandardMaterial({
       color: orangeColor,
       wireframe: true,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.8,
     })
     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.y = 0.5
+    sphere.position.set(0, 0, 0)
     scene.add(sphere)
 
-    // ===== CREATE ORBITING DATA POINTS =====
+    // ===== DATA POINTS =====
     const dataPoints: THREE.Mesh[] = []
-    const dataPointCount = 30
+    const dataPointCount = 40
 
     for (let i = 0; i < dataPointCount; i++) {
-      const pointGeometry = new THREE.SphereGeometry(0.08, 8, 8)
+      const pointGeometry = new THREE.SphereGeometry(0.06, 8, 8)
       const pointMaterial = new THREE.MeshStandardMaterial({
         color: lightOrangeColor,
         emissive: orangeColor,
-        emissiveIntensity: 0.5,
+        emissiveIntensity: 0.6,
       })
       const point = new THREE.Mesh(pointGeometry, pointMaterial)
       
-      // Random position around sphere
       const theta = Math.random() * Math.PI * 2
       const phi = Math.random() * Math.PI
-      const radius = 1.3
+      const radius = 2.4
       
       point.position.x = radius * Math.sin(phi) * Math.cos(theta)
-      point.position.y = radius * Math.cos(phi) + 0.5
+      point.position.y = radius * Math.cos(phi)
       point.position.z = radius * Math.sin(phi) * Math.sin(theta)
       
       scene.add(point)
       dataPoints.push(point)
     }
 
-    // ===== CREATE CONNECTING LINES =====
+    // ===== LINES =====
     const linesMaterial = new THREE.LineBasicMaterial({
       color: orangeColor,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.4,
     })
 
     const linesGeometry = new THREE.BufferGeometry()
@@ -159,57 +210,59 @@ export function DataSphereBooks3D() {
     scene.add(lines)
 
     // ===== LIGHTS =====
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
     scene.add(ambientLight)
 
-    const pointLight1 = new THREE.PointLight(orangeColor, 1, 50)
+    const pointLight1 = new THREE.PointLight(orangeColor, 1.2, 50)
     pointLight1.position.set(5, 5, 5)
     scene.add(pointLight1)
 
-    const pointLight2 = new THREE.PointLight(lightOrangeColor, 0.5, 50)
+    const pointLight2 = new THREE.PointLight(lightOrangeColor, 0.8, 50)
     pointLight2.position.set(-5, -5, 5)
     scene.add(pointLight2)
 
+    const pointLight3 = new THREE.PointLight(0xffffff, 0.5, 50)
+    pointLight3.position.set(0, 5, -5)
+    scene.add(pointLight3)
+
     // ===== ANIMATION =====
-    let animationFrameId: number
     const clock = new THREE.Clock()
 
     const animate = () => {
-      animationFrameId = requestAnimationFrame(animate)
+      const animationId = requestAnimationFrame(animate)
+      SceneManager.setAnimationId(animationId)
+      
       const elapsedTime = clock.getElapsedTime()
 
-      // Rotate entire scene slowly
-      scene.rotation.y = elapsedTime * 0.1
+      scene.rotation.y = elapsedTime * 0.08
 
-      // Animate books (gentle floating)
       books.forEach((book, i) => {
-        book.position.y += Math.sin(elapsedTime * 0.5 + i) * 0.002
-        book.rotation.y += 0.003
+        book.position.y += Math.sin(elapsedTime * 0.5 + i) * 0.001
+        book.rotation.y += 0.002
       })
 
-      // Animate documents (gentle wave)
       documents.forEach((doc, i) => {
-        doc.position.y = Math.sin(elapsedTime * 0.8 + i * 0.5) * 0.5
-        doc.rotation.x = Math.sin(elapsedTime + i) * 0.1
+        doc.position.y = Math.sin(elapsedTime * 0.6 + i * 0.5) * 0.4
+        doc.rotation.x = Math.sin(elapsedTime + i) * 0.08
       })
 
-      // Animate sphere (pulsing)
-      const scale = 1 + Math.sin(elapsedTime * 2) * 0.05
+      const scale = 1 + Math.sin(elapsedTime * 1.5) * 0.1
       sphere.scale.set(scale, scale, scale)
-      sphere.rotation.x += 0.002
-      sphere.rotation.y += 0.003
+      sphere.rotation.x += 0.004
+      sphere.rotation.y += 0.005
 
-      // Animate data points (orbiting)
       dataPoints.forEach((point, i) => {
-        const angle = elapsedTime * 0.3 + (i / dataPointCount) * Math.PI * 2
-        const radius = 1.3 + Math.sin(elapsedTime * 2 + i) * 0.1
+        const angle = elapsedTime * 0.25 + (i / dataPointCount) * Math.PI * 2
+        const radius = 2.4 + Math.sin(elapsedTime * 1.5 + i) * 0.2
         
         point.position.x = radius * Math.sin(angle)
         point.position.z = radius * Math.cos(angle)
-        point.position.y = Math.sin(elapsedTime * 0.5 + i) * 0.3 + 0.5
+        point.position.y = Math.sin(elapsedTime * 0.4 + i) * 0.5
+        
+        const pointScale = 1 + Math.sin(elapsedTime * 3 + i) * 0.3
+        point.scale.set(pointScale, pointScale, pointScale)
       })
 
-      // Update connecting lines
       const newLinePositions: number[] = []
       for (let i = 0; i < dataPoints.length; i++) {
         const point1 = dataPoints[i]
@@ -227,26 +280,30 @@ export function DataSphereBooks3D() {
     }
     animate()
 
-    // Handle resize
     const handleResize = () => {
       if (!containerRef.current) return
-      const size = Math.min(containerRef.current.clientWidth, 500)
+      const newSize = Math.min(
+        containerRef.current.clientWidth,
+        containerRef.current.clientHeight,
+        600
+      )
       camera.aspect = 1
       camera.updateProjectionMatrix()
-      renderer.setSize(size, size)
+      renderer.setSize(newSize, newSize)
     }
     window.addEventListener("resize", handleResize)
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize)
-      cancelAnimationFrame(animationFrameId)
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement)
-      }
-      renderer.dispose()
+      console.log("Cleaning up 3D scene")
+      mountedRef.current = false
       
-      // Dispose geometries and materials
+      window.removeEventListener("resize", handleResize)
+      
+      if (containerRef.current && localRendererRef.current?.domElement) {
+        containerRef.current.removeChild(localRendererRef.current.domElement)
+      }
+      
       books.forEach(book => {
         book.geometry.dispose()
         ;(book.material as THREE.Material).dispose()
@@ -261,6 +318,12 @@ export function DataSphereBooks3D() {
         point.geometry.dispose()
         ;(point.material as THREE.Material).dispose()
       })
+      lines.geometry.dispose()
+      linesMaterial.dispose()
+      
+      SceneManager.cleanup()
+      localSceneRef.current = null
+      localRendererRef.current = null
     }
   }, [])
 
