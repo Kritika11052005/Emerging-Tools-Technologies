@@ -36,7 +36,7 @@ export function Footer() {
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold">EWS</span>
               </div>
-              <h3 className="text-xl font-bold">Early Warning System</h3>
+              <h3 className="text-xl font-bold">EduAlert</h3>
             </div>
             <p className="text-gray-400 leading-relaxed mb-4">
               Empowering educators with data-driven insights to reduce student
@@ -199,7 +199,7 @@ export function Footer() {
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} Early Warning System. All rights
+              © {new Date().getFullYear()} EduAlert. All rights
               reserved.
             </p>
             <p className="text-gray-400 text-sm">
