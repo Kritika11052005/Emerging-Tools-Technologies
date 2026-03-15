@@ -36,6 +36,11 @@
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)
 
+**📖 Complete Documentation**
+- [DATABASE_SCHEMA_COMPLETE_GUIDE.md](./DATABASE_SCHEMA_COMPLETE_GUIDE.md) - Full schema specs with diagrams & examples
+- [SCHEMA_IMPROVEMENTS.md](./SCHEMA_IMPROVEMENTS.md) - All v1→v2 improvements explained
+- [SCHEMA_UPGRADE_SUMMARY.md](./SCHEMA_UPGRADE_SUMMARY.md) - Executive summary of changes
+
 ---
 
 ## 🌟 Overview
@@ -467,67 +472,88 @@ Emerging-Tools-Technologies/
 
 ## 🗄️ Database Schema
 
-### Core Tables
+Your database is built on a **production-grade, v2.0 schema** with comprehensive data integrity, audit trails, and performance optimization.
+
+### Schema Highlights
+
+✅ **5 Logical Domains:**
+- Core entities (students, users, subjects)
+- Academic data (attendance, assessments, attempts, fees)
+- Risk evaluation (rules, profiles, notifications)
+- Interventions (case management, followups, counselling)
+- Mappings (user-student, professor-subject, student-subject)
+
+✅ **18 Strategic Indexes** for fast dashboard queries
+
+✅ **Complete Audit Trail** with version tracking, rule history, and explainability
+
+✅ **Data Integrity** with 30+ CHECK constraints, foreign keys, and unique constraints
+
+✅ **Intervention Workflow** tracking (open → in progress → resolved)
+
+### Quick Schema Overview
+
+| Domain | Tables | Purpose |
+|--------|--------|---------|
+| **Core** | students, users, subjects | Master data |
+| **Academic** | attendance_records, assessment_records, subject_attempts, fee_records | Learning indicators |
+| **Risk** | risk_evaluation_rules, risk_profiles, notification_logs | Risk assessment & alerts |
+| **Interventions** | interventions, intervention_followups, counselling_sessions | Case management |
+| **Mappings** | user_students, professor_subjects, student_subjects | Relationships |
+
+### Complete Documentation
+
+📖 **For the complete, detailed schema documentation with:**
+- Full table specifications with all columns, constraints, and examples
+- Entity relationship diagrams (visual and text)
+- Data flow diagrams (ingestion, risk evaluation, notifications)
+- Common query patterns
+- Performance considerations
+- All 20+ tables explained in detail
+
+👉 **See: [`DATABASE_SCHEMA_COMPLETE_GUIDE.md`](./DATABASE_SCHEMA_COMPLETE_GUIDE.md)**
+
+### Core Tables Summary
 
 #### **students**
-Stores student demographic and enrollment information.
-
-```sql
-student_id (PK) | roll_number | full_name | class | section | 
-department | enrollment_year | status | created_at | updated_at
-```
+Master student records with demographic and enrollment info.
 
 #### **attendance_records**
-Tracks attendance across subjects and time periods.
-
-```sql
-attendance_id (PK) | student_id (FK) | subject_code | 
-period_start | period_end | classes_conducted | 
-classes_attended | attendance_percentage | recorded_at
-```
+Tracks attendance % per student, per subject, per period. Enforces 0-100% range.
 
 #### **assessment_records**
-Stores assessment scores and metadata.
-
-```sql
-assessment_id (PK) | student_id (FK) | subject_code | 
-assessment_name | assessment_type | score_obtained | 
-max_score | assessment_date | weightage | recorded_at
-```
+Stores all assessment scores (quizzes, exams, projects) with auto-computed percentages.
 
 #### **subject_attempts**
-Monitors subject attempt counts.
+Monitors how many times a student has attempted each subject (with max limits).
 
-```sql
-attempt_id (PK) | student_id (FK) | subject_code | 
-attempts_used | max_attempts_allowed | last_attempt_date | status
-```
+#### **fee_records**
+Financial obligations tracking with overdue status for financial risk detection.
 
 #### **risk_profiles**
-Consolidated risk assessment for each student.
-
-```sql
-risk_profile_id (PK) | student_id (FK) | attendance_risk | 
-performance_risk | attempt_risk | fee_risk | risk_score | 
-risk_category | last_evaluated_at
-```
+Student risk assessment snapshots with version tracking, explanations, and audit trail.
 
 #### **notification_logs**
-Tracks all sent notifications.
+Complete notification delivery pipeline with retry tracking and provider links.
 
-```sql
-notification_id (PK) | student_id (FK) | recipient_type | 
-risk_category | message_summary | sent_at | delivery_status
-```
+#### **interventions**
+Mentor/counsellor actions to help at-risk students (counselling, remedial, guardian meetings, etc.).
 
-### Relationship Diagram
+### Relationship Diagram (Simplified)
 
 ```
 students (1) ──< (M) attendance_records
 students (1) ──< (M) assessment_records
 students (1) ──< (M) subject_attempts
-students (1) ──< (1) risk_profiles
+students (1) ──< (M) fee_records
+students (1) ──< (M) risk_profiles ──> risk_evaluation_rules
 students (1) ──< (M) notification_logs
+students (1) ──< (M) interventions ──> intervention_followups
+                                    ──> counselling_sessions
+users (1) ──< (M) user_students ──> students
+users (1) ──< (M) professor_subjects ──> subjects
+users (1) ──< (M) interventions
+users (1) ──< (M) intervention_followups
 ```
 
 ---
