@@ -38,8 +38,7 @@
 
 **📖 Complete Documentation**
 - [DATABASE_SCHEMA_COMPLETE_GUIDE.md](./DATABASE_SCHEMA_COMPLETE_GUIDE.md) - Full schema specs with diagrams & examples
-- [SCHEMA_IMPROVEMENTS.md](./SCHEMA_IMPROVEMENTS.md) - All v1→v2 improvements explained
-- [SCHEMA_UPGRADE_SUMMARY.md](./SCHEMA_UPGRADE_SUMMARY.md) - Executive summary of changes
+- [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Database setup and connection guide
 
 ---
 
@@ -281,7 +280,10 @@ This project introduces a **transparent, explainable, and scalable** early warni
 ### Machine Learning & AI
 - **Rule-Based ML** - Transparent threshold logic for risk classification
 - **Large Language Models (LLMs)** - Natural language explanations
-- **Vector Database** - Semantic search for institutional policies
+- **Vector Database (ChromaDB)** - Semantic search for institutional policies
+- **sentence-transformers (all-MiniLM-L6-v2)** - Text embeddings for indexing
+- **Groq API (llama-3.1-8b-instant)** - Fast LLM inference for explanations
+- **FastAPI** - REST API framework for RAG service
 - **RAG (Retrieval-Augmented Generation)** - Grounded, hallucination-free responses
 
 ### DevOps & Deployment
@@ -304,8 +306,9 @@ Ensure you have the following installed:
 
 - **Node.js** (v18+ recommended) - [Download](https://nodejs.org/)
 - **Python** (v3.12+) - [Download](https://www.python.org/)
-- **PostgreSQL** (v14+) - [Download](https://www.postgresql.org/)
+- **PostgreSQL** (v14+) or **Supabase Account** - [Download](https://www.postgresql.org/)
 - **Git** - [Download](https://git-scm.com/)
+- **Groq API Key** (Free) - [Console](https://console.groq.com/)
 
 ### Step 1: Clone the Repository
 
@@ -314,32 +317,24 @@ git clone https://github.com/VarunNarayanJain/Emerging-Tools-Technologies.git
 cd Emerging-Tools-Technologies
 ```
 
-### Step 2: Database Setup
+### Step 2: Database Setup (Supabase)
+This project uses Supabase as its cloud PostgreSQL database.
 
-```bash
-# Start PostgreSQL service (Windows)
-# Services → PostgreSQL → Start
+1. Create a free project at [supabase.com](https://supabase.com/)
+2. Go to **SQL Editor** → paste and run `backend/schema.sql`
+3. Go to **Settings** → **Database** → **Connection String** → **Session Pooler** → copy the URI credentials.
 
-# Create database
-psql -U postgres
-CREATE DATABASE student_warning_db;
-\q
-
-# Run schema
-psql -U postgres -d student_warning_db -f backend/schema.sql
+Create `backend/rag/.env` with your credentials:
+```env
+DB_HOST=your-pooler-host.pooler.supabase.com
+DB_NAME=postgres
+DB_USER=postgres.your-project-ref
+DB_PASSWORD=your-database-password
+DB_PORT=5432
+GROQ_API_KEY=your-groq-api-key
 ```
 
-### Step 3: Backend Configuration
-
-```bash
-# Update database credentials
-# Edit: backend/db/db_connection.py
-
-# Change the following line:
-password="YOUR_DB_PASSWORD"  # Replace with your PostgreSQL password
-```
-
-### Step 4: Frontend Setup
+### Step 3: Frontend Setup
 
 ```bash
 cd frontend
@@ -359,6 +354,10 @@ cd backend/ingestion
 python assessment_ingestion.py
 python attendance_weekly_ingestion.py
 python subject_attempt_ingestion.py
+
+# Terminal 3 - RAG Explanation Service
+python -m uvicorn backend.rag.main:app --host 0.0.0.0 --port 8000
+# API docs available at: http://localhost:8000/docs
 ```
 
 ---
@@ -406,16 +405,33 @@ The system automatically evaluates risk based on:
 4. **Workflow**: System process visualization
 5. **Technology**: Tech stack carousel
 
-### 4️⃣ Query LLM for Explanations
+### 4️⃣ Query LLM for Explanations ✅ LIVE
 
-*(To be implemented)*
+The RAG-powered explanation service is running on FastAPI at `http://localhost:8000`
 
-Mentors can ask:
-- "Why is student X at high risk?"
-- "What interventions are recommended?"
-- "Show historical cases similar to this profile."
+**Available Endpoints:**
 
-The system retrieves relevant institutional policies from the Vector Database and generates contextual responses using RAG.
+- `GET  /health`                — System health check
+- `GET  /students/{id}/summary` — Quick student overview  
+- `GET  /risk-profile/{id}`     — Full student risk data
+- `POST /explain-risk`          — AI-powered explanation (RAG)
+
+**Example — Ask why a student is at risk:**
+```bash
+POST http://localhost:8000/explain-risk
+{
+  "student_id": "STU20231001",
+  "question": "Why is this student at risk and what should I do?"
+}
+```
+
+**Response includes:**
+- Plain English explanation of risk factors
+- Specific intervention recommendations
+- Policies cited from institutional knowledge base
+- Student summary (attendance, scores, flags triggered)
+
+**View interactive API docs:** `http://localhost:8000/docs`
 
 ---
 
@@ -430,6 +446,22 @@ Emerging-Tools-Technologies/
 │   │   ├── assessment_ingestion.py   # Upload assessment scores
 │   │   ├── attendance_weekly_ingestion.py  # Upload attendance data
 │   │   └── subject_attempt_ingestion.py    # Upload attempt records
+│   ├── 📁 rag/
+│   │   ├── vector_store.py           # ChromaDB vector database
+│   │   ├── policy_loader.py          # Policy document embedder
+│   │   ├── rag_engine.py             # RAG + Groq LLM engine
+│   │   ├── main.py                   # FastAPI application
+│   │   ├── requirements.txt          # RAG dependencies
+│   │   ├── .env.example              # Environment template
+│   │   └── 📁 policies/              # Institutional policy docs
+│   │       ├── attendance_policy.txt
+│   │       ├── remedial_guidelines.txt
+│   │       ├── guardian_notification_policy.txt
+│   │       └── academic_probation_rules.txt
+│   ├── 📁 scripts/
+│   │   ├── seed_test_data.py         # Database seeder
+│   │   └── seed_test_data.sql        # SQL seed data
+│   ├── 📁 logs/                      # Ingestion log files
 │   └── schema.sql                    # Complete database schema
 │
 ├── 📁 frontend/
@@ -796,9 +828,9 @@ Repository: [Emerging-Tools-Technologies](https://github.com/VarunNarayanJain/Em
 ![GitHub Issues](https://img.shields.io/github/issues/VarunNarayanJain/Emerging-Tools-Technologies)
 ![GitHub Pull Requests](https://img.shields.io/github/issues-pr/VarunNarayanJain/Emerging-Tools-Technologies)
 
-**Current Version**: 1.0.0 (Beta)  
-**Last Updated**: February 2, 2026  
-**Status**: Active Development 🚀
+**Current Version**: 1.1.0  
+**Last Updated**: March 22, 2026  
+**Status**: Live Service Deployment 🚀
 
 ---
 

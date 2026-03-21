@@ -1,8 +1,8 @@
 # 🗄️ Complete Database Schema Documentation
 
 **Academic Early Warning System v2.0**  
-**Last Updated:** March 15, 2026  
-**Status:** Production-Ready (with 3 minor improvements noted)
+**Last Updated:** March 22, 2026  
+**Status:** Production-Ready (RAG service live)
 
 ---
 
@@ -1110,8 +1110,11 @@ CREATE TABLE guardians (
 
 ---
 
-### 5️⃣ **Optional: Add RAG Knowledge Base Schema**
+### 5️⃣ **Institutional Policies Knowledge Base**
 ```sql
+-- This table is implemented in backend/rag/ via ChromaDB 
+-- See vector_store.py and policy_loader.py for details
+
 CREATE TABLE institutional_policies (
     policy_id SERIAL PRIMARY KEY,
     policy_type VARCHAR(50),  -- 'attendance', 'grades', 'intervention', 'financial'
