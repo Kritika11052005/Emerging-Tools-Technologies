@@ -1,8 +1,8 @@
 import { useState, ReactNode } from 'react'
-import { AuthContext, AuthContextType } from './auth-context'
+import { AuthContext, AuthUser } from './auth-context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthContextType['user']>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>

@@ -9,7 +9,7 @@ interface RiskFlags {
 }
 
 interface RiskScoreDisplayProps {
-  score: number
+  score?: number
   flags?: RiskFlags
   updatedAt?: string
 }
